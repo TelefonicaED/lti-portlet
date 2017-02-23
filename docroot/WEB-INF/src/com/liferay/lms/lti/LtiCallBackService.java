@@ -88,7 +88,7 @@ public class LtiCallBackService extends HttpServlet{
 	//TODO OAuth is not verified 
 	public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException, IOException {	
 		try{
-
+			log.debug("-------------SERVLET DO GET--------------------------------   ");
 			ServletInputStream input = request.getInputStream();
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(input, writer, "UTF-8");
@@ -96,6 +96,14 @@ public class LtiCallBackService extends HttpServlet{
 			if(log.isDebugEnabled())log.debug(xml);
 	
 			IMSPOXRequest imspoxRequest = new IMSPOXRequest(xml);
+			
+			String msg = request.getParameter("lti_msg");
+
+			log.debug("-- MESSAGE RECIEVED: "+msg);
+			
+			String error = request.getParameter("lti_errormsg");
+
+			log.debug("-- ERROR RECIEVED: "+error);
 			
 			imspoxRequest.parsePostBody();
 			Map<String,String> results = imspoxRequest.getBodyMap();
@@ -105,30 +113,32 @@ public class LtiCallBackService extends HttpServlet{
 
 			String[] ids = id.split("-");
 			
-			Long actId = null;
+			Long latId = null;
 			Long userId = null;
+			
 			if(ids.length>1){
-				actId = Long.parseLong(ids[0]);
+				latId = Long.parseLong(ids[0]);
 				userId = Long.parseLong(ids[1]);
 			}
-			for(String key:results.keySet())
-			{
-				System.out.println(key+": "+results.get(key));
+			
+			LearningActivityTry lat = LearningActivityTryLocalServiceUtil.fetchLearningActivityTry(latId);
+			
+			if(log.isDebugEnabled()){
+				for(String key:results.keySet()){
+					log.debug("-->"+key+": "+results.get(key));
+				}
 			}
 			if(imspoxRequest.bodyElement.getNodeName().equals("readResultRequest"))
 			{
-				LearningActivity la = null;
 				StringBuffer out = new StringBuffer(P1);
 				out.append(identifier);
 				out.append(P2);
-				if(actId!=null)
+				if(lat!=null)
 				{
-					la = LearningActivityLocalServiceUtil.getLearningActivity(actId);
-				    grade="0.0";
-				
-					if(LearningActivityResultLocalServiceUtil.existsLearningActivityResult(actId, userId))
+					grade="0.0";
+					if(LearningActivityResultLocalServiceUtil.existsLearningActivityResult(lat.getActId(), userId))
 					{
-						LearningActivityResult learningActivityResult = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(actId, userId);
+						LearningActivityResult learningActivityResult = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(lat.getActId(), userId);
 						 grade=new Double((new Double(learningActivityResult.getResult())/100.0)).toString();
 						 
 					}
@@ -175,94 +185,28 @@ public class LtiCallBackService extends HttpServlet{
 				res.flush();
 				res.close();
 			}
-			if(imspoxRequest.bodyElement.getNodeName().equals("replaceResultRequest"))
-			{
-				
-			
-			
-			
-			Long lGrade = new Double((Double.valueOf(grade)*100)).longValue();
-			boolean ctry = true;
-			StringBuffer out = new StringBuffer(P1);
-			out.append(identifier);
-			out.append(P2);
-
-			LearningActivity la = null;
-			LtiItem ltiItem = null;
-			
-			if(actId!=null){
-				la = LearningActivityLocalServiceUtil.getLearningActivity(actId);
-				ltiItem = LtiItemLocalServiceUtil.fetchByactId(actId);
-			}
-
-			if(log.isDebugEnabled())log.debug("la::"+la+"-ltiItem::"+ltiItem+"-userId::"+userId);
-			if(la!=null&&ltiItem!=null&&userId!=null){
-				if(la.getTries()>0){
-					Integer tries = LearningActivityTryLocalServiceUtil.getTriesCountByActivityAndUser(actId, userId);
-					if(tries>la.getTries()){
-						ctry = false;
-					}
+			if(imspoxRequest.bodyElement.getNodeName().equals("replaceResultRequest")){
+				Long lGrade = new Double((Double.valueOf(grade)*100)).longValue();
+				if(lGrade>100){
+					lGrade=100L;
 				}
-
-				if(log.isDebugEnabled())log.debug("Proc::"+userId+"-"+actId);
-				if(ctry){
+				log.debug("LGRADE:  "+lGrade);
+				StringBuffer out = new StringBuffer(P1);
+				out.append(identifier);
+				out.append(P2);
+	
+				if(lat!=null){
+					LearningActivity la = LearningActivityLocalServiceUtil.getLearningActivity(lat.getActId());
 					try{
-						if(LearningActivityResultLocalServiceUtil.existsLearningActivityResult(actId, userId)){
-							LearningActivityResult learningActivityResult = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(actId, userId);
-							if(log.isDebugEnabled())log.debug("Update!"+learningActivityResult.getResult()+"::"+lGrade);
-							if((learningActivityResult.getPassed()&&learningActivityResult.getResult()<=lGrade)||!learningActivityResult.getPassed()){
-								if(learningActivityResult!=null){
-									
-									ServiceContext serviceContext =  new ServiceContext();
-									serviceContext.setUserId(userId);
-									serviceContext.setCompanyId(la.getCompanyId());
-									serviceContext.setScopeGroupId(la.getGroupId());
-									LearningActivityTry learningTry =LearningActivityTryLocalServiceUtil.createLearningActivityTry(actId,serviceContext);
-									
-									learningTry.setStartDate(new java.util.Date(System.currentTimeMillis()));
-									learningTry.setUserId(userId);
-									learningTry.setResult(lGrade);
-									if(log.isDebugEnabled())log.debug("Add!learningTry");
-									LearningActivityTryLocalServiceUtil.updateLearningActivityTry(learningTry);
-									
-									if(ltiItem.getNote()<=lGrade){
-										learningActivityResult.setPassed(true);
-									}else{
-										learningActivityResult.setPassed(false);
-									}
-									learningActivityResult.setResult(lGrade);
-									if(log.isDebugEnabled())log.debug("Update!learningActivityResult");
-									LearningActivityResultLocalServiceUtil.updateLearningActivityResult(learningActivityResult);
-								}
-							}
-						}else{
-							if(log.isDebugEnabled())log.debug("Add!");
-							ServiceContext serviceContext =  new ServiceContext();
-							serviceContext.setUserId(userId);
-							serviceContext.setCompanyId(la.getCompanyId());
-							serviceContext.setScopeGroupId(la.getGroupId());
-							LearningActivityTry learningTry =LearningActivityTryLocalServiceUtil.createLearningActivityTry(actId,serviceContext);
-							learningTry.setStartDate(new java.util.Date(System.currentTimeMillis()));
-							learningTry.setUserId(userId);
-							learningTry.setResult(lGrade);
-							LearningActivityTryLocalServiceUtil.updateLearningActivityTry(learningTry);
+						ServiceContext serviceContext =  new ServiceContext();
+						serviceContext.setUserId(userId);
+						serviceContext.setCompanyId(la.getCompanyId());
+						serviceContext.setScopeGroupId(la.getGroupId());
+						lat.setEndDate(new Date());
+						lat.setResult(lGrade);
+						if(log.isDebugEnabled())log.debug("Add!learningTry");
+						LearningActivityTryLocalServiceUtil.updateLearningActivityTry(lat);
 							
-							if(ltiItem.getNote()<=lGrade){
-								LearningActivityResult learningActivityResult = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(actId, userId);
-								if(learningActivityResult!=null){
-									learningActivityResult.setPassed(true);
-									learningActivityResult.setResult(lGrade);
-									LearningActivityResultLocalServiceUtil.updateLearningActivityResult(learningActivityResult);
-								}
-							}else{
-								LearningActivityResult learningActivityResult = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(actId, userId);
-								if(learningActivityResult!=null){
-									learningActivityResult.setPassed(false);
-									learningActivityResult.setResult(lGrade);
-									LearningActivityResultLocalServiceUtil.updateLearningActivityResult(learningActivityResult);
-								}
-							}
-						}
 						out.append(SUCCESS);
 					}catch(Exception e){
 						if(log.isDebugEnabled())e.printStackTrace();
@@ -270,24 +214,22 @@ public class LtiCallBackService extends HttpServlet{
 						out.append(FAILURE);
 					}
 				}else{
-					out.append(SUCCESS);
-				}
-			}else{
-				out.append(FAILURE);
-			}
-			out.append(P3);
-			out.append(identifier);
-			out.append(P4);
-			out.append(new Date().getTime());
-			out.append(P5);
-
-			if(log.isDebugEnabled())log.debug(out.toString());
-			
-			response.setContentType("application/x-www-form-urlencoded");
-			PrintWriter res = response.getWriter();
-			res.print(out.toString());
-			res.flush();
-			res.close();
+					out.append(FAILURE);
+				}	
+				
+				out.append(P3);
+				out.append(identifier);
+				out.append(P4);
+				out.append(new Date().getTime());
+				out.append(P5);
+	
+				if(log.isDebugEnabled())log.debug(out.toString());
+				
+				response.setContentType("application/x-www-form-urlencoded");
+				PrintWriter res = response.getWriter();
+				res.print(out.toString());
+				res.flush();
+				res.close();
 			}
 			
 		}catch(Exception e){

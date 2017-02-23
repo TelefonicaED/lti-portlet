@@ -433,6 +433,7 @@ public class BasicLTIUtil {
 			text.append("target=\"output_frame\"");
 		
 		text.append(" encType=\"application/x-www-form-urlencoded\" accept-charset=\"utf-8\">\n");
+		
 		for (Entry<String, String> entry : newMap.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
@@ -442,6 +443,11 @@ public class BasicLTIUtil {
 			// we will be safe and not generate dangerous HTML
 			key = htmlspecialchars(key);
 			value = htmlspecialchars(value);
+			
+			
+			
+			
+		
 			if (!key.equals(BASICLTI_SUBMIT)) {
 				//text.append("<input type=\"submit\" name=\"");
 				text.append("<input type=\"hidden\" name=\"");

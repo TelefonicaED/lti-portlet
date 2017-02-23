@@ -43,6 +43,8 @@
 		<supported-public-render-parameter>actId</supported-public-render-parameter>
 		<supported-public-render-parameter>moduleId</supported-public-render-parameter>
 	    <supported-public-render-parameter>actionEditing</supported-public-render-parameter>
+	    <supported-public-render-parameter>actionEditingActivity</supported-public-render-parameter>
+	    <supported-public-render-parameter>actionEditingDetails</supported-public-render-parameter>
 	</portlet>
 	<public-render-parameter>    
         <identifier>actId</identifier>
@@ -55,5 +57,13 @@
     <public-render-parameter>
         <identifier>actionEditing</identifier>
         <qname xmlns:x="http://www.liferay.com/public-render-parameters">x:actionEditing</qname>
+    </public-render-parameter>
+    <public-render-parameter>
+        <identifier>actionEditingActivity</identifier>
+        <qname xmlns:x="http://www.liferay.com/public-render-parameters">x:actionEditingActivity</qname>
+    </public-render-parameter>
+    <public-render-parameter>
+        <identifier>actionEditingDetails</identifier>
+        <qname xmlns:x="http://www.liferay.com/public-render-parameters">x:actionEditingDetails</qname>
     </public-render-parameter>
 </portlet-app>

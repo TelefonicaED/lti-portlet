@@ -45,5 +45,9 @@ public class LTILearningActivityType extends BaseLearningActivityType {
 	public AssetRenderer getAssetRenderer(LearningActivity larn) throws PortalException,SystemException{
 		return new LTIAssetRenderer(larn,this);
 	}
-
+	
+	@Override
+	public boolean hasDeleteTries() {
+		return true;
+	}
 }

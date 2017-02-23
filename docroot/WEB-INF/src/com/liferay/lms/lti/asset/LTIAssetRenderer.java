@@ -2,6 +2,7 @@ package com.liferay.lms.lti.asset;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
+import javax.portlet.WindowState;
 
 import com.liferay.lms.asset.LearningActivityBaseAssetRenderer;
 import com.liferay.lms.lti.LTILearningActivityType;
@@ -30,4 +31,13 @@ public class LTIAssetRenderer extends LearningActivityBaseAssetRenderer {
 	    portletURL.setParameter("resId",Long.toString( getLearningactivity().getActId()));
 	    return portletURL;
 	}
+	
+	
+	@Override
+	 protected String getMvcPathView(long userId,
+	   LiferayPortletResponse liferayPortletResponse,
+	   WindowState windowState) throws Exception {
+	    return "/html/lti/view.jsp";
+	  
+	 }
 }

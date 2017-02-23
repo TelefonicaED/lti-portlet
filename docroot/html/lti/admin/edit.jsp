@@ -1,3 +1,8 @@
+<%@page import="javax.portlet.PortletRequest"%>
+<%@page import="com.liferay.portal.kernel.portlet.LiferayWindowState"%>
+<%@page import="com.liferay.portal.model.PortletConstants"%>
+<%@page import="com.liferay.portlet.PortletURLFactoryUtil"%>
+<%@page import="com.liferay.portal.kernel.portlet.LiferayPortletURL"%>
 <%@page import="com.liferay.lms.lti.util.LtiItem"%>
 <%@page import="com.liferay.lms.lti.util.LtiItemLocalServiceUtil"%>
 <%@page import="com.liferay.portal.kernel.exception.SystemException"%>
@@ -26,7 +31,21 @@
 		LtiItem ltiItem = LtiItemLocalServiceUtil.fetchByactId(actId);
 		renderRequest.setAttribute("ltiItem", ltiItem);
 	}
+	
+	
+	
+	LiferayPortletURL backUrl = PortletURLFactoryUtil.create(request, PortalUtil.getJsSafePortletId("editactivity"+
+			PortletConstants.WAR_SEPARATOR+"liferaylmsportlet"), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
+	backUrl.setWindowState(LiferayWindowState.NORMAL);
+	backUrl.setParameter("actId", String.valueOf(learningActivity.getActId()));
+	backUrl.setParameter("actionEditingActivity", StringPool.TRUE);
+	backUrl.setParameter("resId", String.valueOf(learningActivity.getActId()));	
+	backUrl.setParameter("resModuleId", String.valueOf(learningActivity.getModuleId()));
+	backUrl.setParameter("jspPage", "/html/editactivity/editactivity.jsp");
+	request.setAttribute("backUrl", backUrl.toString());
 %>
+
+<liferay-ui:header title="<%=learningActivity.getTitle(themeDisplay.getLocale())%>" backURL="<%= (request.getAttribute(\"backUrl\")!=null)?(String)request.getAttribute(\"backUrl\"):\"\" %>"/>
 
 <script type="text/javascript">
 	function check(){
@@ -50,7 +69,7 @@
 			alert("<liferay-ui:message key='learningactivity.lti.error.note.nan' />");
 			return;
 		}
-		document.getElementById("sabeform").submit();
+		document.getElementById("saveform").submit();
 	}
 	
 	function isInt(x) {
@@ -61,7 +80,7 @@
 </script>
 <c:if test="${not empty learningActivity}">
 	<liferay-ui:message key="learningactivity.lti.propertiesfor" /> ${learningActivity.getTitle(themeDisplay.locale)}
-	<form action="${save}" name="saveform" id="sabeform" method="POST" >
+	<form action="${save}" name="saveform" id="saveform" method="POST" >
 		<input type="hidden" name="actId" id="actId" value="${learningActivity.actId}" >
 		<c:choose>
 			<c:when test="${not empty ltiItem}">
@@ -81,6 +100,10 @@
 				<liferay-ui:message key="learningactivity.lti.iframe" />:<input type="checkbox" name="iframe" id="iframe" ><br/>
 			</c:otherwise>
 		</c:choose>
-		<input type="button" value="<liferay-ui:message key="save" />" onclick="javascript:check()" >
+		<aui:button-row>
+			<aui:button type="button" value="save" onclick="javascript:check()" />
+			<aui:button onClick="<%= (request.getAttribute(\"backUrl\")!=null)?(String)request.getAttribute(\"backUrl\"):\"\" %>" type="cancel" value="canceledition"/>
+		</aui:button-row>
+		
 	</form>
 </c:if>
