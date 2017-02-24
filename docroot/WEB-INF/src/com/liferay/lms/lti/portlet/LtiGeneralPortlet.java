@@ -117,126 +117,121 @@ public class LtiGeneralPortlet extends MVCPortlet {
 		}
 		Long actId = ParamUtil.getLong(renderRequest, "actId", 0);
 		if(actId>0){
-			LtiItem ltiItem = LtiItemLocalServiceUtil.fetchByactId(actId);
-			if(ltiItem!=null && ltiItem.getUrl()!=null){
-				LearningActivity learningActivity = null;
-				try {
-					learningActivity = LearningActivityLocalServiceUtil.getLearningActivity(actId);
-				} catch (PortalException e) {
-					if(log.isDebugEnabled())e.printStackTrace();
-					if(log.isErrorEnabled())log.error(e.getMessage());
-				} catch (SystemException e) {
-					if(log.isDebugEnabled())e.printStackTrace();
-					if(log.isErrorEnabled())log.error(e.getMessage());
-				}
-				renderRequest.setAttribute("learningActivity", learningActivity);
-				renderRequest.setAttribute("ltiItem", ltiItem);
-				Map<String,String> postProp = new HashMap<String, String>();
-				ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
-
-				
-				int times = 0;
-				LearningActivityResult result = null;
-				try {
-					times = LearningActivityTryLocalServiceUtil.getTriesCountByActivityAndUser(actId, themeDisplay.getUserId());
-					result = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(actId, themeDisplay.getUserId());
-				} catch (PortalException e) {
-				} catch (SystemException e) {
-				}
-				
-				
-				renderRequest.setAttribute("times", times);
-				renderRequest.setAttribute("result", result);
-				
-				if(times<learningActivity.getTries()||learningActivity.getTries()==0){
-					if(log.isDebugEnabled()){
-						log.debug("link_id:"+PortalUtil.getCurrentURL(PortalUtil.getHttpServletRequest(renderRequest)));
-						log.debug("url:"+ltiItem.getUrl());
-						log.debug("secret:"+ltiItem.getSecret());
-					}
-	
-					ServiceContext serviceContext;
+			try{
+				LtiItem ltiItem = LtiItemLocalServiceUtil.fetchByactId(actId);
+				if(ltiItem!=null && ltiItem.getUrl()!=null){
+					LearningActivity learningActivity = null;
 					try {
-						serviceContext = ServiceContextFactory.getInstance(LearningActivityTry.class.getName(), renderRequest);
-					
-						LearningActivityTry lat =LearningActivityTryLocalServiceUtil.createOrDuplicateLast(actId,serviceContext);
-						
-						StringBuffer st = new StringBuffer();
-						st.append(lat.getLatId());
-						st.append("-");
-						st.append(themeDisplay.getUserId());
-		
-						//Identificador para comunicarse con el servicio
-						postProp.put(BasicLTIConstants.LIS_RESULT_SOURCEDID, st.toString());
-						postProp.put(BasicLTIConstants.LIS_OUTCOME_SERVICE_URL, PortalUtil.getPortalURL(PortalUtil.getHttpServletRequest(renderRequest))+"/lti-portlet/ltiservice");
-						
-						//Identificador del recurso
-						postProp.put(BasicLTIConstants.RESOURCE_LINK_ID, st.toString()); 	
-						postProp.put(BasicLTIConstants.RESOURCE_LINK_TITLE, learningActivity.getTitle(themeDisplay.getLocale())); 
-						postProp.put(BasicLTIConstants.RESOURCE_LINK_DESCRIPTION, learningActivity.getDescription(themeDisplay.getLocale()));
-						
-						//URL de vuelta para la capa de presentacion
-						postProp.put(BasicLTIConstants.LAUNCH_PRESENTATION_RETURN_URL, PortalUtil.getPortalURL(PortalUtil.getHttpServletRequest(renderRequest))+themeDisplay.getURLCurrent());
-						
-						
-						//CONTEXT_ID is optional, but recomended, this is a unique value
-					    postProp.put(BasicLTIConstants.CONTEXT_ID,st.toString());
-						postProp.put(BasicLTIConstants.CONTEXT_TITLE,learningActivity.getTitle(LocaleUtil.getDefault().toString(), true));
-						postProp.put(BasicLTIConstants.CONTEXT_LABEL,learningActivity.getTitle(LocaleUtil.getDefault().toString(), true));
-						postProp.put(BasicLTIConstants.CONTEXT_TYPE, ltiItem.getContenType());
-		
-						//Rol del usuario.
-						boolean isTeacher=themeDisplay.getPermissionChecker().hasPermission(themeDisplay.getScopeGroupId(), "com.liferay.lms.model",themeDisplay.getScopeGroupId(), "VIEW_RESULTS");	
-						if(isTeacher)
-						{
-							postProp.put(BasicLTIConstants.ROLES,"Instructor");
-						}
-						else
-						{
-							postProp.put(BasicLTIConstants.ROLES,"Student");
-						}
-						
-						//Identificacion del usuario
-						postProp.put(BasicLTIConstants.LIS_PERSON_NAME_GIVEN, themeDisplay.getUser().getFirstName());
-						postProp.put(BasicLTIConstants.LIS_PERSON_NAME_FAMILY, themeDisplay.getUser().getLastName());
-						postProp.put(BasicLTIConstants.LIS_PERSON_NAME_FULL, themeDisplay.getUser().getFullName());
-						postProp.put(BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY, themeDisplay.getUser().getEmailAddress());
-						postProp.put(BasicLTIConstants.LAUNCH_PRESENTATION_LOCALE, themeDisplay.getLocale().toString());
-						postProp.put(BasicLTIConstants.USER_ID,String.valueOf(themeDisplay.getUserId()));
-						
-						
-						postProp.put(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_GUID, themeDisplay.getCompany().getWebId());
-						postProp.put(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_NAME, themeDisplay.getCompany().getWebId());
-						try {
-							postProp.put(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_DESCRIPTION, themeDisplay.getCompany().getName());
-						//postProp.put(BasicLTIConstants.TOOL_CONSUMER_INFO_VERSION, )
-						}catch(Exception e){
-							log.debug(e);
-						}
-				
-						Map<String,String> props =  BasicLTIUtil.signProperties(postProp, ltiItem.getUrl(), "POST", ltiItem.getId(), ltiItem.getSecret(), 
-								null, String.valueOf(ltiItem.getLtiItemId()), null,null,null);
-		
-						String postLaunch = BasicLTIUtil.postLaunchHTML(props, ltiItem.getUrl(), false,themeDisplay.getLocale(),ltiItem.getIframe());
-		
-						
-		
-						if(log.isDebugEnabled())log.debug("PostLaunch\n"+postLaunch);
-						renderRequest.setAttribute("postLaunch", postLaunch);
-						
-					
-						
-					} catch (PortalException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (SystemException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						learningActivity = LearningActivityLocalServiceUtil.getLearningActivity(actId);
+					} catch (PortalException e) {
+						if(log.isDebugEnabled())e.printStackTrace();
+						if(log.isErrorEnabled())log.error(e.getMessage());
+					} catch (SystemException e) {
+						if(log.isDebugEnabled())e.printStackTrace();
+						if(log.isErrorEnabled())log.error(e.getMessage());
 					}
+					renderRequest.setAttribute("learningActivity", learningActivity);
+					renderRequest.setAttribute("ltiItem", ltiItem);
+					Map<String,String> postProp = new HashMap<String, String>();
+					ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+	
+					
+					int times = 0;
+					LearningActivityResult result = null;
+					try {
+						times = LearningActivityTryLocalServiceUtil.getTriesCountByActivityAndUser(actId, themeDisplay.getUserId());
+						result = LearningActivityResultLocalServiceUtil.getByActIdAndUserId(actId, themeDisplay.getUserId());
+					} catch (PortalException e) {
+					} catch (SystemException e) {
+					}
+					
+					
+					renderRequest.setAttribute("times", times);
+					renderRequest.setAttribute("result", result);
+					
+					if(times<learningActivity.getTries()||learningActivity.getTries()==0){
+						if(log.isDebugEnabled()){
+							log.debug("link_id:"+PortalUtil.getCurrentURL(PortalUtil.getHttpServletRequest(renderRequest)));
+							log.debug("url:"+ltiItem.getUrl());
+							log.debug("secret:"+ltiItem.getSecret());
+						}
+		
+						ServiceContext serviceContext;
+						
+							serviceContext = ServiceContextFactory.getInstance(LearningActivityTry.class.getName(), renderRequest);
+						
+							LearningActivityTry lat =LearningActivityTryLocalServiceUtil.createOrDuplicateLast(actId,serviceContext);
+							
+							StringBuffer st = new StringBuffer();
+							st.append(lat.getLatId());
+							st.append("-");
+							st.append(themeDisplay.getUserId());
+			
+							//Identificador para comunicarse con el servicio
+							postProp.put(BasicLTIConstants.LIS_RESULT_SOURCEDID, st.toString());
+							postProp.put(BasicLTIConstants.LIS_OUTCOME_SERVICE_URL, PortalUtil.getPortalURL(PortalUtil.getHttpServletRequest(renderRequest))+"/lti-portlet/ltiservice");
+							
+							//Identificador del recurso
+							postProp.put(BasicLTIConstants.RESOURCE_LINK_ID, st.toString()); 	
+							postProp.put(BasicLTIConstants.RESOURCE_LINK_TITLE, learningActivity.getTitle(themeDisplay.getLocale())); 
+							postProp.put(BasicLTIConstants.RESOURCE_LINK_DESCRIPTION, learningActivity.getDescription(themeDisplay.getLocale()));
+							
+							//URL de vuelta para la capa de presentacion
+							postProp.put(BasicLTIConstants.LAUNCH_PRESENTATION_RETURN_URL, PortalUtil.getPortalURL(PortalUtil.getHttpServletRequest(renderRequest))+themeDisplay.getURLCurrent());
+							
+							
+							//CONTEXT_ID is optional, but recomended, this is a unique value
+						    postProp.put(BasicLTIConstants.CONTEXT_ID,st.toString());
+							postProp.put(BasicLTIConstants.CONTEXT_TITLE,learningActivity.getTitle(LocaleUtil.getDefault().toString(), true));
+							postProp.put(BasicLTIConstants.CONTEXT_LABEL,learningActivity.getTitle(LocaleUtil.getDefault().toString(), true));
+							postProp.put(BasicLTIConstants.CONTEXT_TYPE, ltiItem.getContenType());
+			
+							//Rol del usuario.
+							boolean isTeacher=themeDisplay.getPermissionChecker().hasPermission(themeDisplay.getScopeGroupId(), "com.liferay.lms.model",themeDisplay.getScopeGroupId(), "VIEW_RESULTS");	
+							if(isTeacher)
+							{
+								postProp.put(BasicLTIConstants.ROLES,"Instructor");
+							}
+							else
+							{
+								postProp.put(BasicLTIConstants.ROLES,"Student");
+							}
+							
+							//Identificacion del usuario
+							postProp.put(BasicLTIConstants.LIS_PERSON_NAME_GIVEN, themeDisplay.getUser().getFirstName());
+							postProp.put(BasicLTIConstants.LIS_PERSON_NAME_FAMILY, themeDisplay.getUser().getLastName());
+							postProp.put(BasicLTIConstants.LIS_PERSON_NAME_FULL, themeDisplay.getUser().getFullName());
+							postProp.put(BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY, themeDisplay.getUser().getEmailAddress());
+							postProp.put(BasicLTIConstants.LAUNCH_PRESENTATION_LOCALE, themeDisplay.getLocale().toString());
+							postProp.put(BasicLTIConstants.USER_ID,String.valueOf(themeDisplay.getUserId()));
+							
+							
+							postProp.put(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_GUID, themeDisplay.getCompany().getWebId());
+							postProp.put(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_NAME, themeDisplay.getCompany().getWebId());
+							try {
+								postProp.put(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_DESCRIPTION, themeDisplay.getCompany().getName());
+							//postProp.put(BasicLTIConstants.TOOL_CONSUMER_INFO_VERSION, )
+							}catch(Exception e){
+								log.debug(e);
+							}
+					
+							Map<String,String> props =  BasicLTIUtil.signProperties(postProp, ltiItem.getUrl(), "POST", ltiItem.getId(), ltiItem.getSecret(), 
+									null, String.valueOf(ltiItem.getLtiItemId()), null,null,null);
+			
+							String postLaunch = BasicLTIUtil.postLaunchHTML(props, ltiItem.getUrl(), false,themeDisplay.getLocale(),ltiItem.getIframe());
+			
+							
+			
+							if(log.isDebugEnabled())log.debug("PostLaunch\n"+postLaunch);
+							renderRequest.setAttribute("postLaunch", postLaunch);
+						}
+				
+				
+				}else{
+					SessionErrors.add(renderRequest,"lti-not-configured");
 				}
-				
-				
-			}else{
+			}catch (Exception e) {
+				e.printStackTrace();
 				SessionErrors.add(renderRequest,"lti-not-configured");
 			}
 		}else{
