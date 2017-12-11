@@ -277,7 +277,7 @@ public class OAuthMessage {
         }
         if (pMap.get(OAuth.OAUTH_TIMESTAMP) == null) {
         	//TODO TLS modification the timestamp is very exact
-        	// issued fixed with mcgrawhill provided, somehow it´s  sending milliseconds instead of seconds as oauth requires 
+        	// issued fixed with mcgrawhill provided, somehow it´s  sending milliseconds instead of seconds as oauth requires as specification
             addParameter(OAuth.OAUTH_TIMESTAMP, (System.currentTimeMillis() /  1000) + "");
         }
         if (pMap.get(OAuth.OAUTH_NONCE) == null) {
