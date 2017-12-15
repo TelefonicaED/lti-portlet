@@ -425,7 +425,7 @@ public class BasicLTIUtil {
 		StringBuilder text = new StringBuilder();
 		// paint form
 		text.append("<div id=\"ltiLaunchFormSubmitArea\">\n");
-		text.append("<form action=\"");
+		text.append("<form target=\"_blank\" action=\"");
 		text.append(endpoint);
 		text.append("\" name=\"ltiLaunchForm\" id=\"ltiLaunchForm\" method=\"post\" ");
 		
