@@ -194,7 +194,7 @@ public class LtiGeneralPortlet extends MVCPortlet {
 							}
 							else
 							{
-								postProp.put(BasicLTIConstants.ROLES,"Student");
+								postProp.put(BasicLTIConstants.ROLES,"Learner");
 							}
 							
 							//Identificacion del usuario
