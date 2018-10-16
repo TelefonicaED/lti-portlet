@@ -20,6 +20,11 @@ public class LTILearningActivityType extends BaseLearningActivityType {
 	public String getName() {
 		return "learningactivity.lti";
 	}
+	
+	@Override
+	public String getClassName(){
+		return getClass().getCanonicalName();
+	}
 
 	@Override
 	public String getDescription() {
