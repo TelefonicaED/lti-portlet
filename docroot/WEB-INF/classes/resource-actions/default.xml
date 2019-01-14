@@ -17,4 +17,22 @@
    </guest-unsupported>
   </permissions>
  </model-resource>
+ 
+ 	 <model-resource>
+		<model-name>com.liferay.lms.lti.LTILearningActivityType</model-name>
+		<portlet-ref>
+			<portlet-name>lti</portlet-name>
+		</portlet-ref>
+		<permissions>
+			<supports>
+				<action-key>ADD_ACTIVITY</action-key>
+			</supports>
+			<site-member-defaults />
+			<guest-defaults />
+			<guest-unsupported>
+				<action-key>ADD_ACTIVITY</action-key>
+			</guest-unsupported>
+		</permissions>
+	</model-resource>
+	
 </resource-action-mapping>
