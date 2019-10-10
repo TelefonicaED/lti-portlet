@@ -272,50 +272,7 @@ public class LtiGeneralPortlet extends MVCPortlet {
 
 	}
 
-	@ProcessAction(name = "save")
-	public void save(ActionRequest actionRequest, ActionResponse actionResponse) throws Exception {
-		log.debug("---- SAVE");
-		Long actId = ParamUtil.getLong(actionRequest, "actId", 0);
-		if(log.isDebugEnabled())log.debug("windowState:"+actionRequest.getWindowState());
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
-		LtiItem ltiItem = LtiItemLocalServiceUtil.fetchByactId(actId);
-
-		String url = ParamUtil.getString(actionRequest, "url", "");
-		String id = ParamUtil.getString(actionRequest, "id", "");
-		String secret = ParamUtil.getString(actionRequest, "secret", "");
-		String rol = ParamUtil.getString(actionRequest, "rol", "");
-		Boolean iframe = ParamUtil.getBoolean(actionRequest, "iframe", false);
-		Integer note = ParamUtil.getInteger(actionRequest, "note", 0);
-		LearningActivity la = LearningActivityLocalServiceUtil.fetchLearningActivity(actId);
-		if(ltiItem!=null){
-			ltiItem.setUrl(url);
-			ltiItem.setSecret(secret);
-			ltiItem.setRol(rol);
-			ltiItem.setIframe(iframe);
-			ltiItem.setNote(note);
-			ltiItem.setId(id);
-			ltiItem = LtiItemLocalServiceUtil.updateLtiItem(ltiItem);
-		}else{
-			ltiItem = LtiItemLocalServiceUtil.create(actId, url, secret,id);
-			ltiItem.setRol(rol);
-			ltiItem.setIframe(iframe);
-			ltiItem.setNote(note);
-			ltiItem = LtiItemLocalServiceUtil.updateLtiItem(ltiItem);	
-		}
-
-		LiferayPortletURL backUrl = PortletURLFactoryUtil.create(actionRequest, PortalUtil.getJsSafePortletId("editactivity"+
-				PortletConstants.WAR_SEPARATOR+"liferaylmsportlet"), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-		backUrl.setWindowState(LiferayWindowState.NORMAL);
-		backUrl.setParameter("actId", String.valueOf(la.getActId()));
-		backUrl.setParameter("actionEditingActivity", StringPool.TRUE);
-		backUrl.setParameter("resId", String.valueOf(la.getActId()));	
-		backUrl.setParameter("resModuleId", String.valueOf(la.getModuleId()));
-		backUrl.setParameter("jspPage", "/html/editactivity/editactivity.jsp");
-		
-		
-		actionResponse.sendRedirect(backUrl.toString());
-		
-	}
+	
 
 	protected void include(String path, RenderRequest renderRequest,
 			RenderResponse renderResponse) throws IOException, PortletException {
