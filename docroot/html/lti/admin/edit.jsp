@@ -21,89 +21,46 @@
 	}
 	
 	LearningActivity learningActivity = null;
+    String url= "";
+	String secret= "";
+	Boolean iframe= false;
+	Integer note = 0;
+	String id="";
+	
 	try {
 		learningActivity = LearningActivityLocalServiceUtil.getLearningActivity(actId);
+		
+		url= LearningActivityLocalServiceUtil.getExtraContentValue(actId,  "url", "");
+		secret= LearningActivityLocalServiceUtil.getExtraContentValue(actId,  "secret", "");
+		iframe= Boolean.parseBoolean(LearningActivityLocalServiceUtil.getExtraContentValue(actId,  "iframe", "false"));
+		note = Integer.parseInt(LearningActivityLocalServiceUtil.getExtraContentValue(actId,  "note", "0"));
+		id=LearningActivityLocalServiceUtil.getExtraContentValue(actId,  "id", "");
 	} catch (PortalException e) {
 	} catch (SystemException e) {
 	}
 	if(learningActivity!=null){
 		renderRequest.setAttribute("learningActivity", learningActivity);
-		LtiItem ltiItem = LtiItemLocalServiceUtil.fetchByactId(actId);
-		renderRequest.setAttribute("ltiItem", ltiItem);
 	}
 	
 	
-	
-	LiferayPortletURL backUrl = PortletURLFactoryUtil.create(request, PortalUtil.getJsSafePortletId("editactivity"+
-			PortletConstants.WAR_SEPARATOR+"liferaylmsportlet"), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-	backUrl.setWindowState(LiferayWindowState.NORMAL);
-	backUrl.setParameter("actId", String.valueOf(learningActivity.getActId()));
-	backUrl.setParameter("actionEditingActivity", StringPool.TRUE);
-	backUrl.setParameter("resId", String.valueOf(learningActivity.getActId()));	
-	backUrl.setParameter("resModuleId", String.valueOf(learningActivity.getModuleId()));
-	backUrl.setParameter("jspPage", "/html/editactivity/editactivity.jsp");
-	request.setAttribute("backUrl", backUrl.toString());
 %>
 
-<liferay-ui:header title="<%=learningActivity.getTitle(themeDisplay.getLocale())%>" backURL="<%= (request.getAttribute(\"backUrl\")!=null)?(String)request.getAttribute(\"backUrl\"):\"\" %>"/>
-
-<script type="text/javascript">
-	function check(){
-		if(document.getElementById('url').value==null||document.getElementById('url').value==""){
-			alert("<liferay-ui:message key='learningactivity.lti.error.url' />");
-			return;
-		}
-		if(document.getElementById('id').value==null||document.getElementById('id').value==""){
-			alert("<liferay-ui:message key='learningactivity.lti.error.id' />");
-			return;
-		}
-		if(document.getElementById('secret').value==null||document.getElementById('secret').value==""){
-			alert("<liferay-ui:message key='learningactivity.lti.error.secret' />");
-			return;
-		}
-		if(document.getElementById('note').value==null||document.getElementById('note').value==""){
-			alert("<liferay-ui:message key='learningactivity.lti.error.note' />");
-			return;
-		}
-		if(!isInt(document.getElementById('note').value)){
-			alert("<liferay-ui:message key='learningactivity.lti.error.note.nan' />");
-			return;
-		}
-		document.getElementById("saveform").submit();
-	}
-	
-	function isInt(x) {
-		  var y=parseInt(x);
-		  if (isNaN(y)) return false;
-		  return x==y && x.toString()==y.toString();
-	}
-</script>
-<c:if test="${not empty learningActivity}">
-	<liferay-ui:message key="learningactivity.lti.propertiesfor" /> ${learningActivity.getTitle(themeDisplay.locale)}
-	<form action="${save}" name="saveform" id="saveform" method="POST" >
-		<input type="hidden" name="actId" id="actId" value="${learningActivity.actId}" >
-		<c:choose>
-			<c:when test="${not empty ltiItem}">
-				<liferay-ui:message key="learningactivity.lti.url" />:<br/><input type="text" name="url" id="url" value="${ltiItem.url}" ><br/>
-				<liferay-ui:message key="learningactivity.lti.key" />:<br/><input type="text" name="id" id="id" value="${ltiItem.id}" ><br/>
-				<liferay-ui:message key="learningactivity.lti.secret" />:<br/><input type="text" name="secret" id="secret" value="${ltiItem.secret}" ><br/>
-				<input type="hidden" name="rol" id="rol" value="Student" >
-				<liferay-ui:message key="learningactivity.lti.note" />:<br/><input type="text" name="note" id="note" value="${ltiItem.note}" ><br/>
-				<liferay-ui:message key="learningactivity.lti.iframe" />:<input type="checkbox" name="iframe" id="iframe" <c:if test="${ltiItem.iframe}">checked="checked"</c:if> ><br/>
-			</c:when>
-			<c:otherwise>
-				<liferay-ui:message key="learningactivity.lti.url" />:<br/><input type="text" name="url" id="url" value="" ><br/>
-				<liferay-ui:message key="learningactivity.lti.key" />:<br/><input type="text" name="id" id="id" value="" ><br/>
-				<liferay-ui:message key="learningactivity.lti.secret" />:<br/><input type="text" name="secret" id="secret" value="" ><br/>
-				<input type="hidden" name="rol" id="rol" value="Student" >
-				<liferay-ui:message key="learningactivity.lti.note" />:<br/><input type="text" name="note" id="note" value="0" ><br/>
-				<liferay-ui:message key="learningactivity.lti.iframe" />:<input type="checkbox" name="iframe" id="iframe" ><br/>
-			</c:otherwise>
-		</c:choose>
-		<aui:button-row>
-			<aui:button type="button" value="save" onclick="javascript:check()" />
-			<aui:button onClick="<%= (request.getAttribute(\"backUrl\")!=null)?(String)request.getAttribute(\"backUrl\"):\"\" %>" type="cancel" value="canceledition"/>
-		</aui:button-row>
+	<aui:input name="url"  value="<%=url %>" label="learningactivity.lti.url">
+			<aui:validator name="required"></aui:validator>
 		
-	</form>
-</c:if>
+	</aui:input>
+	<aui:input name="id"  value="<%=id %>" label="learningactivity.lti.key">
+		<aui:validator name="required"></aui:validator>
+	</aui:input>
+	<input type="hidden" name="rol" id="rol" value="Student" >
+	<aui:input name="secret"  value="<%=secret %>" label="learningactivity.lti.secret">
+		<aui:validator name="required"></aui:validator>
+	</aui:input>
+	<aui:input name="note"  value="<%=note %>" label="learningactivity.lti.note">
+		<aui:validator name="required"></aui:validator>
+		<aui:validator name="number"></aui:validator>
+	</aui:input>
+	<aui:input name="iframe" type="checkbox" label="learningactivity.lti.iframe" value="<%=iframe %>" checked="<%=iframe %>"/>
+	
+
+	
