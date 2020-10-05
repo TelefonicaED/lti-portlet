@@ -8,7 +8,7 @@ El formato está basado en [SemVer](https://semver.org/spec/v2.0.0.html).
 
 
 ### Fixed
-- #189865 Corrección al guardar las claves del registro LTI.
+- #189865 Corrección al guardar las claves del registro LTI. 
 
 
 
