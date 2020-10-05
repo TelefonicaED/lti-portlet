@@ -3,6 +3,15 @@ Todos los cambios de este proyecto estarán documentados en este archivo.
 
 El formato está basado en [SemVer](https://semver.org/spec/v2.0.0.html).
 
+
+## [5.5.0](https://github.com/TelefonicaED/lti-portlet/tags/v5.5.0)
+
+
+### Fixed
+- #189865 Corrección al guardar las claves del registro LTI.
+
+
+
 ## [5.2.0](https://github.com/TelefonicaED/lti-portlet/tags/v5.2.0)
 
 
