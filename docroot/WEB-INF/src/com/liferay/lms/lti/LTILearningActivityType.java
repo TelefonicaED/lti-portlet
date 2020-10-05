@@ -1,6 +1,7 @@
 package com.liferay.lms.lti;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.portlet.PortletResponse;
 
@@ -99,12 +100,16 @@ public class LTILearningActivityType extends BaseLearningActivityType {
 		rootElement.add(url);
 
 		
-		Element id = rootElement.element("id");
-		if (id != null) {
-			id.detach();
-			rootElement.remove(id);
+		List<Element> ids = 	rootElement.elements("id");
+	
+		for(Element id: ids){
+			if (id != null) {
+				id.detach();
+				rootElement.remove(id);
+			}
 		}
-		id = SAXReaderUtil.createElement("id");
+		
+		Element id = SAXReaderUtil.createElement("id");
 		id.setText(ParamUtil.getString(uploadRequest, "id", ""));
 		rootElement.add(id);
 		
@@ -146,7 +151,7 @@ public class LTILearningActivityType extends BaseLearningActivityType {
 			note.detach();
 			rootElement.remove(note);
 		}
-		note = SAXReaderUtil.createElement("id");
+		note = SAXReaderUtil.createElement("note");
 		note.setText(ParamUtil.getString(uploadRequest, "note", "0"));
 		rootElement.add(note);
 		
