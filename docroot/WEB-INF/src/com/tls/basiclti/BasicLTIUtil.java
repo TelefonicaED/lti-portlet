@@ -425,12 +425,13 @@ public class BasicLTIUtil {
 		StringBuilder text = new StringBuilder();
 		// paint form
 		text.append("<div id=\"ltiLaunchFormSubmitArea\">\n");
-		text.append("<form target=\"_blank\" action=\"");
+		if (iframe){
+			text.append("<form target=\"output_frame\" action=\"");
+		}else{
+			text.append("<form target=\"_blank\" action=\"");
+		}
 		text.append(endpoint);
 		text.append("\" name=\"ltiLaunchForm\" id=\"ltiLaunchForm\" method=\"post\" ");
-		
-		if(iframe)
-			text.append("target=\"output_frame\"");
 		
 		text.append(" encType=\"application/x-www-form-urlencoded\" accept-charset=\"utf-8\">\n");
 		
